@@ -1,7 +1,7 @@
 const userController = {};
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
-const morgan = require("morgan");
+
 userController.createUser = async (req, res) => {
   try {
     let { email, password, name, level } = req.body;
