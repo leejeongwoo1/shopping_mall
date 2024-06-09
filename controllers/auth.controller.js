@@ -23,7 +23,6 @@ authController.loginWithEmail = async (req, res) => {
 
 authController.authenticate = async (req, res, next) => {
   try {
-    console.log(12);
     const tokenString = req.headers.authorization;
     if (!tokenString) throw new Error("Token not found");
     const token = tokenString.replace("Bearer ", "");
@@ -31,7 +30,6 @@ authController.authenticate = async (req, res, next) => {
       if (error) throw new Error("invalid token");
       req.userId = payload._id;
     });
-    console.log(req.userId);
     next();
   } catch (error) {
     res.status(400).json({ status: "fail", message: error.message });
