@@ -127,13 +127,25 @@ productController.checkStock = async (item) => {
       message: `${product.name}의 ${item.size}재고가 부족합니다`,
     };
   }
-  const newStock = { ...product.stock };
-  newStock[item.size] -= item.qty;
-  product.stock = newStock;
-  await product.save();
+  // const newStock = { ...product.stock };
+  // newStock[item.size] -= item.qty;
+  // product.stock = newStock;
+  // await product.save();
   //충분하다면, 재고에서 - qty 성공
   return { isVerify: true };
 };
+productController.reduceStock = async (item) => {
+  try {
+    const product = await Product.findById(item.productId);
+    const newStock = { ...product.stock };
+    newStock[item.size] -= item.qty;
+    product.stock = newStock;
+    await product.save();
+  } catch (error) {
+    return error.message;
+  }
+};
+
 productController.checkItemListStock = async (itemList) => {
   const insufficientStockItems = [];
   //재고 확인 로직
@@ -146,7 +158,11 @@ productController.checkItemListStock = async (itemList) => {
       return stockCheck;
     })
   );
-
+  if (insufficientStockItems.length == 0) {
+    itemList.map(async (item) => {
+      productController.reduceStock(item);
+    });
+  }
   return insufficientStockItems;
 };
 module.exports = productController;
