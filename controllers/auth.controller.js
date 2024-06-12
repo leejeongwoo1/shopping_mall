@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require("google-auth-library");
 require("dotenv").config();
 const authController = {};
 
@@ -47,5 +48,37 @@ authController.checkAdminPermission = async (req, res, next) => {
     res.status(400).json({ status: "fail", message: error.message });
   }
 };
+authController.loginWithGoogle = async (req, res) => {
+  try {
+    const { token } = req.body;
+    const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const { email, name } = ticket.getPayload();
 
+    let user = await User.findOne({ email });
+    if (!user) {
+      //유저 새로 생성
+      const randomPassword = "" + Math.floor(Math.random() * 1000000);
+      const salt = await bcrypt.genSalt(10);
+      const newPassword = await bcrypt.hash(randomPassword, salt);
+      user = new User({
+        name,
+        email,
+        password: newPassword,
+      });
+      await user.save();
+    }
+    //토큰을 발행하고 리턴
+    const sessionToken = await user.generateToken();
+    res.status(200).json({ status: "success", user, token: sessionToken });
+    //토큰값을 읽어와서 => 유저정보를 뽑아내고 email
+    //a. 이미 로그인을 한적이 있는 유저 => 로그인시키고 토큰값 주며됨
+    //b. 처음 로그인을 시도를 한 유저다 => 유저정보 먼저 새로 생성 => 토큰값
+  } catch (error) {
+    return res.status(400).json({ status: "fail", message: error.message });
+  }
+};
 module.exports = authController;
