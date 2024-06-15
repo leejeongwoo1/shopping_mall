@@ -34,7 +34,6 @@ authController.authenticate = async (req, res, next) => {
     next();
   } catch (error) {
     res.status(400).json({ status: "fail", message: error.message });
-    console.log(123123);
   }
 };
 

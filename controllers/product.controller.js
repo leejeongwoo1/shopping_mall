@@ -39,6 +39,10 @@ productController.getProducts = async (req, res) => {
       ? { name: { $regex: name, $options: "i" }, isDeleted: false }
       : { isDeleted: false };
     let query = Product.find(cond);
+
+    const sortField = "sold";
+    query = query.sort({ [sortField]: -1 });
+
     let response = { status: "success" };
     if (page) {
       query.skip((page - 1) * PAGE_SIZE).limit(PAGE_SIZE);
@@ -164,5 +168,19 @@ productController.checkItemListStock = async (itemList) => {
     });
   }
   return insufficientStockItems;
+};
+
+productController.updateSold = async (itemList) => {
+  for (const item of itemList) {
+    const product = await Product.findById(item.productId);
+    if (!product) {
+      throw new Error("updateSold error");
+    }
+    if (typeof product.sold !== "number") product.sold = 0;
+    console.log(product.sold);
+    product.sold += item.qty;
+
+    await product.save();
+  }
 };
 module.exports = productController;

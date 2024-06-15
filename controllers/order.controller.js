@@ -21,6 +21,9 @@ orderController.createOrder = async (req, res) => {
       );
       throw new Error(errorMessage);
     }
+    //console.log(orderList);
+    //제품 판매지수 업데이트
+    await productController.updateSold(orderList);
     //order를 만들자
     const newOrder = new Order({
       userId,
